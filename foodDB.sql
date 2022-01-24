@@ -82,6 +82,19 @@ CREATE TABLE `favorites_foods` (
   `foodID` int
 );
 
+CREATE TABLE `reviews_restaurants` (
+  `id` int,
+  `userID` int,
+  `restaurantID` int,
+  `content` varchar(255)
+);
+
+CREATE TABLE `reviews_foods` (
+  `userID` int,
+  `foodID` int,
+  `content` varchar(255)
+);
+
 ALTER TABLE `foods` ADD FOREIGN KEY (`restaurantID`) REFERENCES `restaurants` (`id`);
 
 ALTER TABLE `restaurants` ADD FOREIGN KEY (`addressID`) REFERENCES `addresses` (`id`);
@@ -107,3 +120,11 @@ ALTER TABLE `foods` ADD FOREIGN KEY (`categoryID`) REFERENCES `categories` (`id`
 ALTER TABLE `favorites_foods` ADD FOREIGN KEY (`userID`) REFERENCES `users` (`id`);
 
 ALTER TABLE `favorites_foods` ADD FOREIGN KEY (`foodID`) REFERENCES `foods` (`id`);
+
+ALTER TABLE `reviews_restaurants` ADD FOREIGN KEY (`userID`) REFERENCES `users` (`id`);
+
+ALTER TABLE `reviews_foods` ADD FOREIGN KEY (`userID`) REFERENCES `users` (`id`);
+
+ALTER TABLE `reviews_foods` ADD FOREIGN KEY (`foodID`) REFERENCES `foods` (`id`);
+
+ALTER TABLE `reviews_restaurants` ADD FOREIGN KEY (`restaurantID`) REFERENCES `restaurants` (`id`);
