@@ -2,7 +2,6 @@ package foodbiz
 
 import (
 	"context"
-	"errors"
 	"food_delivery_service/modules/food/foodmodel"
 )
 
@@ -19,9 +18,10 @@ func NewCreateFoodBiz(store CreateFoodStore) *createFoodBiz {
 }
 
 func (biz *createFoodBiz) CreateFood(ctx context.Context, data *foodmodel.FoodCreate) error {
-	if data.Name == "" {
-		return errors.New("food name can not be blank")
+	if err := data.Validate(); err != nil {
+		return err
 	}
+
 	err := biz.store.Create(ctx, data)
 
 	return err

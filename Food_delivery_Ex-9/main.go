@@ -1,12 +1,11 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"food_delivery_service/component"
 	"food_delivery_service/modules/food/foodtransport/ginfood"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
@@ -65,99 +64,24 @@ func runService(db *gorm.DB) error {
 		})
 	})
 
+	appCtx := component.NewAppContext(db)
+
 	foods := r.Group("/foods")
 	{
-		foods.POST("", ginfood.CreateFood(db))
+		// create food
+		foods.POST("", ginfood.CreateFood(appCtx))
 
 		// list foods
-		foods.GET("", func(c *gin.Context) {
-			var listFood []Food
-			type Filter struct {
-				Status int `json:"status" form:"status"`
-			}
-			var filter Filter
-			if err := c.ShouldBind(&filter); err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-			newDB := db
-			if filter.Status > 0 {
-				newDB = db.Where("status = ?", filter.Status)
-			}
-			if err := newDB.Find(&listFood).Error; err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-			c.JSON(http.StatusOK, listFood)
-		})
+		foods.GET("", ginfood.ListFood(appCtx))
 
 		//Get food by id
-		foods.GET("/:id", func(c *gin.Context) {
-			id, err := strconv.Atoi(c.Param("id"))
-			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-
-			var data Food
-			if err := db.Where("id = ?", id).First(&data).Error; err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-			c.JSON(http.StatusOK, data)
-		})
+		foods.GET("/:id", ginfood.GetFood(appCtx))
 
 		//Update food by id
-		foods.PATCH("/:id", func(c *gin.Context) {
-			id, err := strconv.Atoi(c.Param("id"))
-			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-			var data FoodUpdate
-			if err := c.ShouldBind(&data); err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-			if err := db.Where("id = ?", id).Updates(&data).Error; err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": errors.New("update failed"),
-				})
-				return
-			}
-			c.JSON(http.StatusOK, data)
-		})
-		//Delete food by id
+		foods.PATCH("/:id", ginfood.UpdateFood(appCtx))
 
-		foods.DELETE("/:id", func(c *gin.Context) {
-			id, err := strconv.Atoi(c.Param("id"))
-			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-			if err := db.Table(Food{}.TableName()).
-				Where("id = ?", id).Delete(nil).Error; err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-			c.JSON(http.StatusOK, gin.H{"ok": "1"})
-		})
+		//Delete food by id
+		foods.DELETE("/:id", ginfood.DeleteFood(appCtx))
 	}
 
 	return r.Run()

@@ -11,22 +11,36 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CreateFood(appCtx component.AppContext) gin.HandlerFunc {
+func ListFood(appCtx component.AppContext) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var data foodmodel.FoodCreate
+		var filter foodmodel.Filter
 
-		if err := c.ShouldBind(&data); err != nil {
+		if err := c.ShouldBind(&filter); err != nil {
 			c.JSON(401, gin.H{
 				"error": err.Error(),
 			})
 
 			return
 		}
+
+		var paging common.Paging
+
+		if err := c.ShouldBind(&paging); err != nil {
+			c.JSON(401, gin.H{
+				"error": err.Error(),
+			})
+
+			return
+		}
+
+		paging.Fulfill()
 
 		store := foodstorage.NewSQLStore(appCtx.GetMainDBConnection())
-		biz := foodbiz.NewCreateFoodBiz(store)
+		biz := foodbiz.NewListFoodBiz(store)
 
-		if err := biz.CreateFood(c.Request.Context(), &data); err != nil {
+		result, err := biz.ListFood(c.Request.Context(), &filter, &paging)
+
+		if err != nil {
 			c.JSON(401, gin.H{
 				"error": err.Error(),
 			})
@@ -34,6 +48,6 @@ func CreateFood(appCtx component.AppContext) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, common.SimpleSuccessResponse(data))
+		c.JSON(http.StatusOK, common.NewSuccessResponse(result, paging, filter))
 	}
 }
