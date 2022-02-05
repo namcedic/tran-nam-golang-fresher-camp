@@ -30,5 +30,9 @@ func (biz *listFoodBiz) ListFood(
 ) ([]foodmodel.Food, error) {
 	result, err := biz.store.ListDataByCondition(ctx, nil, filter, paging)
 
+	if err != nil {
+		return nil, common.ErrCannotListEntity(foodmodel.EntityName, err)
+	}
+
 	return result, err
 }

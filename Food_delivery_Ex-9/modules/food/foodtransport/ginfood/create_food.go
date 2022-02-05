@@ -16,22 +16,14 @@ func CreateFood(appCtx component.AppContext) gin.HandlerFunc {
 		var data foodmodel.FoodCreate
 
 		if err := c.ShouldBind(&data); err != nil {
-			c.JSON(401, gin.H{
-				"error": err.Error(),
-			})
-
-			return
+			panic(common.ErrInvalidRequest(err))
 		}
 
 		store := foodstorage.NewSQLStore(appCtx.GetMainDBConnection())
 		biz := foodbiz.NewCreateFoodBiz(store)
 
 		if err := biz.CreateFood(c.Request.Context(), &data); err != nil {
-			c.JSON(401, gin.H{
-				"error": err.Error(),
-			})
-
-			return
+			panic(err)
 		}
 
 		c.JSON(http.StatusOK, common.SimpleSuccessResponse(data))

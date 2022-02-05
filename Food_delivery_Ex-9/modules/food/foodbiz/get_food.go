@@ -2,6 +2,7 @@ package foodbiz
 
 import (
 	"context"
+	"food_delivery_service/common"
 	"food_delivery_service/modules/food/foodmodel"
 )
 
@@ -23,6 +24,18 @@ func NewGetFoodBiz(store GetFoodStore) *getFoodBiz {
 
 func (biz *getFoodBiz) GetFood(ctx context.Context, id int) (*foodmodel.Food, error) {
 	data, err := biz.store.FindDataByCondition(ctx, map[string]interface{}{"id": id})
+
+	if err != nil {
+		if err != common.RecordNotFound {
+			return nil, common.ErrCannotGetEntity(foodmodel.EntityName, err)
+		}
+
+		return nil, common.ErrCannotGetEntity(foodmodel.EntityName, err)
+	}
+
+	if data.Status == 0 {
+		return nil, common.ErrEntityDeleted(foodmodel.EntityName, nil)
+	}
 
 	return data, err
 }
