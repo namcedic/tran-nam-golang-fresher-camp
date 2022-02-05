@@ -10,6 +10,7 @@ const EntityName = "Food"
 type Food struct {
 	common.SQLModel `json:",inline"`
 	Name            string `json:"name" gorm:"column:name;"`
+	RestaurantId    int    `json:"restaurant_id" gorm:"column:restaurant_id;"`
 	Status          int    `json:"status" gorm:"column:status;"`
 }
 
@@ -18,8 +19,9 @@ func (Food) TableName() string {
 }
 
 type FoodUpdate struct {
-	Name   *string `json:"name" gorm:"column:name;"`
-	Status *int    `json:"status" gorm:"column:status;"`
+	Name         *string `json:"name" gorm:"column:name;"`
+	RestaurantId *int    `json:"restaurant_id" gorm:"column:restaurant_id;"`
+	Status       *int    `json:"status" gorm:"column:status;"`
 }
 
 func (FoodUpdate) TableName() string {
@@ -27,9 +29,10 @@ func (FoodUpdate) TableName() string {
 }
 
 type FoodCreate struct {
-	Id     int    `json:"id" gorm:"column:id;"`
-	Name   string `json:"name" gorm:"column:name;"`
-	Status int    `json:"status" gorm:"column:status;"`
+	Id           int    `json:"id" gorm:"column:id;"`
+	Name         string `json:"name" gorm:"column:name;"`
+	RestaurantId int    `json:"restaurant_id" gorm:"column:restaurant_id;"`
+	Status       int    `json:"status" gorm:"column:status;"`
 }
 
 func (FoodCreate) TableName() string {
