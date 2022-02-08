@@ -52,7 +52,7 @@ func (biz *uploadBiz) Upload(ctx context.Context, data []byte, folder, fileName 
 
 	img.Width = w
 	img.Height = h
-	img.CloudName = "s3" // should be set in provider
+	//img.CloudName = "s3" // should be set in provider
 	img.Extension = fileExt
 
 	//if err := biz.imgStore.CreateImage(ctx, img); err != nil {
