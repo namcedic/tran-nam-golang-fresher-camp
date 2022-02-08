@@ -45,7 +45,7 @@ func main() {
 	s3Region := "ap-southeast-1"
 	s3APIKey := "AKIAUS2KPLDJUOXE22X2"
 	s3SecretKey := "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"
-	s3Domain := "S3Domain"
+	s3Domain := "https://d1n632kj3y4onx.cloudfront.net"
 
 	// s3BucketName := os.Getenv("S3BucketName")
 	// s3Region := os.Getenv("S3Region")
