@@ -9,4 +9,4 @@
 + DB sẽ yêu cầu nhiều dung lượng để lưu trữ hơn và sẽ làm ảnh hưởng đến việc back-up, truy xuất dữ liệu.
 + Lưu trữ binary data lớn trong DB sẽ ảnh hưởng đến hiệu năng của DB.
 + Nếu có lỗi trong binary data sẽ khó phát hiện.
-+ Làm tăng tính bảo mật 
++ Làm tăng tính bảo mật cho dữ liệu
