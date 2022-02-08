@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"food_delivery_service/component"
+	"food_delivery_service/middleware"
 	"food_delivery_service/modules/food/foodtransport/ginfood"
 	"log"
 	"net/http"
@@ -50,14 +51,16 @@ func main() {
 }
 
 func runService(db *gorm.DB) error {
+	appCtx := component.NewAppContext(db)
 	r := gin.Default()
+	r.Use(middleware.Recover(appCtx))
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
 		})
 	})
 
-	appCtx := component.NewAppContext(db)
+	
 
 	foods := r.Group("/foods")
 	{
