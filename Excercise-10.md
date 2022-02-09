@@ -3,6 +3,7 @@
   + Lưu file upload vào ngay bên trong service sẽ khiến service tốn dung lượng để lưu trữ, chứa các file vật lý.
   + Dùng Cloud giúp tiết kiệm chi phí cho các thiết bị lưu trữ vật lý.
   + Dùng Cloud sẽ tăng cường bảo mật, giảm nguy cơ mất dữ liệu, có thể truy cập mọi lúc mọi nơi với nhiều loại thiết bị khác nhau và dễ mở rộng.
+  + Tránh được các sai sót không mong muốn từ phía người dùng khi upload như sai địa chỉ url của hình, đăng hình ảnh không phù hợp.
 
  Vì sao không chứa ảnh binary vào DB?
   + DB sẽ yêu cầu nhiều dung lượng để lưu trữ hơn và sẽ làm ảnh hưởng đến việc back-up, truy xuất dữ liệu.
