@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"food_delivery_service/component"
 	"food_delivery_service/component/uploadprovider"
 	"food_delivery_service/middleware"
@@ -8,8 +9,10 @@ import (
 	"food_delivery_service/modules/upload/uploadtransport/ginupload"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -34,36 +37,39 @@ type FoodUpdate struct {
 func (FoodUpdate) TableName() string {
 	return Food{}.TableName()
 }
+func goDotEnvVariable(key string) string {
+
+	// load .env file
+	err := godotenv.Load(".env")
+
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	return os.Getenv(key)
+}
 
 func main() {
 	// refer https://github.com/go-sql-driver/mysql#dsn-data-source-name for details
-	dsn := "root:123456789@tcp(127.0.0.1:3366)/food_delivery?charset=utf8mb4&parseTime=True&loc=Local"
 
-	//dsn := os.Getenv("DBConnectionStr")
-
-	s3BucketName := "food-go"
-	s3Region := "ap-southeast-1"
-	s3APIKey := "AKIAUS2KPLDJUOXE22X2"
-	s3SecretKey := "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"
-	s3Domain := "https://d1n632kj3y4onx.cloudfront.net"
-
-	// s3BucketName := os.Getenv("S3BucketName")
-	// s3Region := os.Getenv("S3Region")
-	// s3APIKey := os.Getenv("S3APIKey")
-	// s3SecretKey := os.Getenv("S3SecretKey")
-	// s3Domain := os.Getenv("S3Domain")
+	dsn := goDotEnvVariable("DBCONNECTIONSTR")
+	s3BucketName := goDotEnvVariable("S3BUCKETNAME")
+	s3Region := goDotEnvVariable("S3REGION")
+	s3APIKey := goDotEnvVariable("S3APIKEY")
+	s3SecretKey := goDotEnvVariable("S3SECRETKEY")
+	s3Domain := goDotEnvVariable("S3DOMAIN")
 
 	s3Provider := uploadprovider.NewS3Provider(s3BucketName, s3Region, s3APIKey, s3SecretKey, s3Domain)
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("err1", err)
 	}
 
 	if err := runService(db, s3Provider); err != nil {
-		log.Fatalln(err)
+		log.Fatalln("err1", err)
 	}
-	//fmt.Println(db)
+	fmt.Println(db)
 }
 
 func runService(db *gorm.DB, upProvider uploadprovider.UploadProvider) error {
