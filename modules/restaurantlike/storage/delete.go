@@ -6,11 +6,11 @@ import (
 	restaurantlikemodel "food_delivery_service/modules/restaurantlike/model"
 )
 
-func (s *sqlStore) Delete(ctx context.Context, userId, restaurantId int) error {
+func (s *sqlStore) Delete(ctx context.Context, data *restaurantlikemodel.Like) error {
 	db := s.db
 
 	if err := db.Table(restaurantlikemodel.Like{}.TableName()).
-		Where("user_id =? and restaurant_id =?", userId, restaurantId).
+		Where("restaurant_id =? and user_id =?", data.RestaurantId, data.UserId).
 		Delete(nil).
 		Error; err != nil {
 		return common.ErrDB(err)
