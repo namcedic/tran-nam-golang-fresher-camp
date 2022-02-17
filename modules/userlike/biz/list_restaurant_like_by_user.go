@@ -28,11 +28,11 @@ func (biz *listRestaurantLikeByUserBiz) ListRestaurants(
 	filter *userlikemodel.Filter,
 	paging *common.Paging,
 ) ([]common.SimpleRestaurant, error) {
-	users, err := biz.store.GetRestaurantLikeByUser(ctx, nil, filter, paging, "Restaurant")
+	restaurants, err := biz.store.GetRestaurantLikeByUser(ctx, nil, filter, paging, "Restaurant")
 
 	if err != nil {
 		return nil, common.ErrCannotListEntity(userlikemodel.EntityName, err)
 	}
 
-	return users, nil
+	return restaurants, nil
 }

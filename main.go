@@ -98,6 +98,8 @@ func runService(db *gorm.DB, upProvider uploadprovider.UploadProvider, secretKey
 
 		// Get Restaurant likes
 		restaurants.GET("/:id/liked-users", ginrestaurantlike.ListUser(appCtx))
+		restaurants.POST("/:id/like", ginrestaurantlike.UserLikeRestaurant(appCtx))
+		restaurants.DELETE("/:id/unlike", ginrestaurantlike.UserUnLikeRestaurant(appCtx))
 	}
 
 	foods := v1.Group("/foods", middleware.RequiredAuth(appCtx))

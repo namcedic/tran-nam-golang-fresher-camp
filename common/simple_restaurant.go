@@ -1,11 +1,10 @@
 package common
 
 type SimpleRestaurant struct {
-	SQLModel   `json:",inline"`
-	Name       string `json:"name" gorm:"column:name;"`
-	Addr       string `json:"address" gorm:"column:addr;"`
-	Logo       *Image `json:"logo" gorm:"column:logo;"`
-	LikedCount int    `json:"liked_count" gorm:"-"`
+	SQLModel `json:",inline"`
+	Name     string `json:"name" gorm:"column:name;"`
+	Addr     string `json:"address" gorm:"column:addr;"`
+	Logo     *Image `json:"logo" gorm:"column:logo;"`
 }
 
 func (SimpleRestaurant) TableName() string {

@@ -6,7 +6,7 @@ import (
 	restaurantlikemodel "food_delivery_service/modules/restaurantlike/model"
 )
 
-type ListUserLikeRestaurantStore interface {
+type ListUserLikeRestaurant interface {
 	GetUsersLikeRestaurant(ctx context.Context,
 		conditions map[string]interface{},
 		filter *restaurantlikemodel.Filter,
@@ -16,10 +16,10 @@ type ListUserLikeRestaurantStore interface {
 }
 
 type listUserLikeRestaurantBiz struct {
-	store ListUserLikeRestaurantStore
+	store ListUserLikeRestaurant
 }
 
-func NewListUserLikeRestaurantBiz(store ListUserLikeRestaurantStore) *listUserLikeRestaurantBiz {
+func NewListUserLikeRestaurantBiz(store ListUserLikeRestaurant) *listUserLikeRestaurantBiz {
 	return &listUserLikeRestaurantBiz{store: store}
 }
 
