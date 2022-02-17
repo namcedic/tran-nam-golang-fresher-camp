@@ -1,0 +1,23 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [    
+        {
+            "name": "Launch Package",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            "env": {
+                "DBConnectionStr": "root:123456789@tcp(127.0.0.1:3366)/food_delivery?charset=utf8mb4&parseTime=True&loc=Local",
+                "S3BucketName":"food-go",
+                "S3Region":"ap-southeast-1",
+                "S3APIKey":"AKIAUS2KPLDJUOXE22X2",
+                "S3SecretKey":"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",
+                "S3Domain":"https://d1n632kj3y4onx.cloudfront.net",
+            }
+        }
+    ]
+}
