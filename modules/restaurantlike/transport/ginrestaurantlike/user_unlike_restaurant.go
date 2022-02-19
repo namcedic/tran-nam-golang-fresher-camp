@@ -27,7 +27,6 @@ func UserUnLikeRestaurant(appCtx component.AppContext) gin.HandlerFunc {
 		}
 
 		store := restaurantlikestorage.NewSQLStore(appCtx.GetMainDBConnection())
-		//decStore := restaurantstorage.NewSQLStore(appCtx.GetMainDBConnection())
 		biz := rstlikebiz.NewUserUnLikeRestaurantBiz(store, appCtx.GetPubsub())
 
 		if err := biz.UnLikeRestaurant(c.Request.Context(), &data); err != nil {

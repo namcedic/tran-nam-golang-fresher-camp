@@ -8,10 +8,6 @@ import (
 	"sync"
 )
 
-// A pb run locally (in-mem)
-// It has a queue (buffer channel) at it's core and many group of subscribers.
-// Because we want to send a message with a specific topic for many subscribers in a group can handle.
-
 type localPubSub struct {
 	messageQueue chan *pubsub.Message
 	mapChannel   map[pubsub.Topic][]chan *pubsub.Message
