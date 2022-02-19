@@ -3,8 +3,8 @@ package rstlikebiz
 import (
 	"context"
 	"food_delivery_service/common"
-	"food_delivery_service/component/asyncjob"
 	restaurantlikemodel "food_delivery_service/modules/restaurantlike/model"
+	"food_delivery_service/pubsub"
 )
 
 type UserLikeRestaurantStore interface {
@@ -13,16 +13,20 @@ type UserLikeRestaurantStore interface {
 		moreInfo ...string) (*restaurantlikemodel.Like, error)
 	Create(ctx context.Context, data *restaurantlikemodel.Like) error
 }
-type IncreaseLikeCountStore interface {
-	IncreaseLikeCount(ctx context.Context, id int) error
-}
+
+//type IncreaseLikeCountStore interface {
+//	IncreaseLikeCount(ctx context.Context, id int) error
+//}
 type userLikeRestaurantBiz struct {
-	store    UserLikeRestaurantStore
-	incStore IncreaseLikeCountStore
+	store UserLikeRestaurantStore
+	//incStore IncreaseLikeCountStore
+	pubsub pubsub.Pubsub
 }
 
-func NewUserLikeRestaurantBiz(store UserLikeRestaurantStore, incStore IncreaseLikeCountStore) *userLikeRestaurantBiz {
-	return &userLikeRestaurantBiz{store: store, incStore: incStore}
+func NewUserLikeRestaurantBiz(store UserLikeRestaurantStore,
+	//incStore IncreaseLikeCountStore,
+	pubsub pubsub.Pubsub) *userLikeRestaurantBiz {
+	return &userLikeRestaurantBiz{store: store, pubsub: pubsub}
 }
 
 func (biz *userLikeRestaurantBiz) LikeRestaurant(
@@ -41,14 +45,15 @@ func (biz *userLikeRestaurantBiz) LikeRestaurant(
 		return restaurantlikemodel.ErrCannotLikeRestaurant(err)
 	}
 
-	go func() {
-		defer common.AppRecover()
-		job := asyncjob.NewJob(func(ctx context.Context) error {
-			return biz.incStore.IncreaseLikeCount(ctx, data.RestaurantId)
-		})
-
-		_ = asyncjob.NewGroup(true, job).Run(ctx)
-	}()
+	biz.pubsub.Publish(ctx, common.TopicUserLikeRestaurant, pubsub.NewMessage(data))
+	//go func() {
+	//	defer common.AppRecover()
+	//	job := asyncjob.NewJob(func(ctx context.Context) error {
+	//		return biz.incStore.IncreaseLikeCount(ctx, data.RestaurantId)
+	//	})
+	//
+	//	_ = asyncjob.NewGroup(true, job).Run(ctx)
+	//}()
 
 	return nil
 }
