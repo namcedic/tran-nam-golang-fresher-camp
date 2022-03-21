@@ -4,10 +4,15 @@ import (
 	"context"
 	"food_delivery_service/common"
 	"food_delivery_service/modules/user/usermodel"
+	"go.opencensus.io/trace"
 	"gorm.io/gorm"
 )
 
 func (s *sqlStore) FindUser(ctx context.Context, conditions map[string]interface{}, moreInfo ...string) (*usermodel.User, error) {
+
+	_, span := trace.StartSpan(ctx, "store.user.find-user")
+	defer span.End()
+
 	db := s.db.Table(usermodel.User{}.TableName())
 
 	for i := range moreInfo {

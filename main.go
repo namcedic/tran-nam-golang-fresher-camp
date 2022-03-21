@@ -1,18 +1,25 @@
 package main
 
 import (
+	"food_delivery_service/common"
 	"food_delivery_service/component"
 	"food_delivery_service/component/uploadprovider"
+	"food_delivery_service/memcache"
 	"food_delivery_service/middleware"
 	"food_delivery_service/modules/category/categorytransport/gincategory"
 	"food_delivery_service/modules/food/foodtransport/ginfood"
 	"food_delivery_service/modules/restaurant/restauranttransport/ginrestaurant"
 	"food_delivery_service/modules/restaurantlike/transport/ginrestaurantlike"
 	"food_delivery_service/modules/upload/uploadtransport/ginupload"
+	"food_delivery_service/modules/user/userstorage"
 	"food_delivery_service/modules/user/usertransport/ginuser"
 	"food_delivery_service/modules/userlike/transport/ginuserlike"
 	"food_delivery_service/pubsub/pblocal"
+	"food_delivery_service/skio"
 	"food_delivery_service/subscriber"
+	jg "go.opencensus.io/exporter/jaeger"
+	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/trace"
 	"log"
 	"net/http"
 	"os"
@@ -63,11 +70,21 @@ func runService(db *gorm.DB, upProvider uploadprovider.UploadProvider, secretKey
 
 	appCtx := component.NewAppContext(db, upProvider, secretKey, pblocal.NewPubSub())
 
+	userStore := userstorage.NewSQLStore(appCtx.GetMainDBConnection())
+	userCachingStore := memcache.NewUserCaching(memcache.NewCaching(), userStore)
+
+	r := gin.Default()
+
 	//subscriber.Setup(appCtx)
-	if err := subscriber.NewEngine(appCtx).Start(); err != nil {
+	rtEngine := skio.NewEngine()
+
+	if err := rtEngine.Run(appCtx, r); err != nil {
 		log.Fatalln(err)
 	}
-	r := gin.Default()
+	if err := subscriber.NewEngine(appCtx, rtEngine).Start(); err != nil {
+		log.Fatalln(err)
+	}
+
 	r.Use(middleware.Recover(appCtx))
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -76,15 +93,16 @@ func runService(db *gorm.DB, upProvider uploadprovider.UploadProvider, secretKey
 	})
 
 	// CRUD
+	r.StaticFile("/demo/", "./demo.html")
 
 	v1 := r.Group("/v1")
-	v1.POST("/upload", ginupload.Upload(appCtx))
+	v1.POST("/upload", middleware.RequiredAuth(appCtx, userCachingStore), ginupload.Upload(appCtx))
 	v1.POST("/register", ginuser.Register(appCtx))
 	v1.POST("/login", ginuser.Login(appCtx))
-	v1.GET("/profile", middleware.RequiredAuth(appCtx), ginuser.GetProfile(appCtx))
-	v1.GET("/users/:id/liked-restaurants", middleware.RequiredAuth(appCtx), ginuserlike.ListRestaurant(appCtx))
+	v1.GET("/profile", middleware.RequiredAuth(appCtx, userCachingStore), ginuser.GetProfile(appCtx))
+	v1.GET("/users/:id/liked-restaurants", middleware.RequiredAuth(appCtx, userCachingStore), ginuserlike.ListRestaurant(appCtx))
 
-	restaurants := v1.Group("/restaurants", middleware.RequiredAuth(appCtx))
+	restaurants := v1.Group("/restaurants", middleware.RequiredAuth(appCtx, userCachingStore))
 	{
 		// create Restaurant
 		restaurants.POST("", ginrestaurant.CreateRestaurant(appCtx))
@@ -107,7 +125,7 @@ func runService(db *gorm.DB, upProvider uploadprovider.UploadProvider, secretKey
 		restaurants.DELETE("/:id/unlike", ginrestaurantlike.UserUnLikeRestaurant(appCtx))
 	}
 
-	foods := v1.Group("/foods", middleware.RequiredAuth(appCtx))
+	foods := v1.Group("/foods", middleware.RequiredAuth(appCtx, userCachingStore))
 	{
 		// create food
 		foods.POST("", ginfood.CreateFood(appCtx))
@@ -125,7 +143,7 @@ func runService(db *gorm.DB, upProvider uploadprovider.UploadProvider, secretKey
 		foods.DELETE("/:id", ginfood.DeleteFood(appCtx))
 	}
 
-	categories := v1.Group("/categories", middleware.RequiredAuth(appCtx))
+	categories := v1.Group("/categories", middleware.RequiredAuth(appCtx, userCachingStore))
 	{
 		// create food
 		categories.POST("", gincategory.CreateCategory(appCtx))
@@ -143,5 +161,37 @@ func runService(db *gorm.DB, upProvider uploadprovider.UploadProvider, secretKey
 		categories.DELETE("/:id", gincategory.DeleteCategory(appCtx))
 	}
 
-	return r.Run()
+	v1.GET("/encode-uid", func(c *gin.Context) {
+		type reqData struct {
+			DbType int `form:"type"`
+			RealId int `form:"id"`
+		}
+
+		var d reqData
+		c.ShouldBind(&d)
+
+		c.JSON(http.StatusOK, gin.H{
+			"id": common.NewUID(uint32(d.RealId), d.DbType, 1),
+		})
+	})
+
+	je, err := jg.NewExporter(jg.Options{
+		AgentEndpoint: "localhost:6831",
+		Process:       jg.Process{ServiceName: "Food-Delivery"},
+	})
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	trace.RegisterExporter(je)
+	trace.ApplyConfig(trace.Config{DefaultSampler: trace.ProbabilitySampler(1)})
+
+	return http.ListenAndServe(
+		":8080",
+		&ochttp.Handler{
+			Handler: r,
+		},
+	)
+	//return r.Run()
 }

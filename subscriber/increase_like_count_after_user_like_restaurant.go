@@ -6,10 +6,13 @@ import (
 	"food_delivery_service/component"
 	"food_delivery_service/modules/restaurant/restaurantstorage"
 	"food_delivery_service/pubsub"
+	"food_delivery_service/skio"
+	"go.opencensus.io/trace"
 )
 
 type HasRestaurantId interface {
 	GetRestaurantId() int
+	GetUserId() int
 }
 
 func IncreaseLikeCountAfterUserLikeRestaurant(appCtx component.AppContext, ctx context.Context) {
@@ -33,7 +36,21 @@ func RunIncreaseLikeCountAfterUserLikeRestaurant(appCtx component.AppContext) co
 		Hld: func(ctx context.Context, message *pubsub.Message) error {
 			store := restaurantstorage.NewSQLStore(appCtx.GetMainDBConnection())
 			likeData := message.Data().(HasRestaurantId)
-			return store.IncreaseLikeCount(ctx, likeData.GetRestaurantId())
+
+			ctx1, span := trace.StartSpan(ctx, "pubsub.sub.RunIncreaseLikeCountAfterUserLikeRestaurant")
+			defer span.End()
+
+			return store.IncreaseLikeCount(ctx1, likeData.GetRestaurantId())
+		},
+	}
+}
+
+func EmitRealtimeAfterUserLikeRestaurant(appCtx component.AppContext, rtEngine skio.RealtimeEngine) consumerJob {
+	return consumerJob{
+		Title: "Emit realtime after user likes restaurant",
+		Hld: func(ctx context.Context, message *pubsub.Message) error {
+			likeData := message.Data().(HasRestaurantId)
+			return rtEngine.EmitToUser(likeData.GetUserId(), string(message.Channel()), likeData)
 		},
 	}
 }
